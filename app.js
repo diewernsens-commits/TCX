@@ -1,3 +1,4 @@
+// Version: v1.0.4
 let chartInstance = null;
 
 let file1Data = null;
@@ -80,8 +81,14 @@ function refreshAllUI() {
     const noData = document.getElementById('noDataMessage');
     const dashboard = document.getElementById('dashboard');
 
-    if (noData) noData.classList.add('hidden');
-    if (dashboard) dashboard.classList.remove('hidden');
+    if (noData) {
+        noData.classList.add('hidden');
+        noData.style.setProperty('display', 'none', 'important');
+    }
+    if (dashboard) {
+        dashboard.classList.remove('hidden');
+        dashboard.style.setProperty('display', 'flex', 'important');
+    }
 
     try {
         updateDashboardUI();
