@@ -1,155 +1,99 @@
-<!DOCTYPE html>
+      <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TCX Viewer & Vergleich</title>
-    <!-- CSS -->
-    <link rel="stylesheet" href="style.css">
-    <!-- Chart.js & Zoom Plugin -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TCX Analytics</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+  <script src="app.js" defer></script>
 </head>
 <body>
 
-    <header>
-        <div class="file-inputs">
-            <div>
-                <label style="font-size: 10px; display:block; color: var(--text-muted);">TCX 1 (Weiß)</label>
-                <input type="file" id="fileInput1" accept=".tcx">
-            </div>
-            <div>
-                <label style="font-size: 10px; display:block; color: var(--tcx2-color);">TCX 2 (Orange)</label>
-                <input type="file" id="fileInput2" accept=".tcx">
-            </div>
-        </div>
+  <!-- Header mit Titel und Upload-Buttons -->
+  <header class="app-header">
+    <h1>TCX Analytics</h1>
+    <div class="file-buttons">
+      <label for="tcx1File" class="btn btn-primary">TCX1</label>
+      <input type="file" id="tcx1File" accept=".tcx" hidden>
 
-        <div class="relative-menu">
-            <button id="tcx2SettingsBtn" class="btn hidden">⚙️ TCX 2 anpassen</button>
-            <div id="tcx2Menu" class="tcx2-menu hidden">
-                <div>
-                    <label>Zeit-Offset (Sekunden)</label>
-                    <input type="number" id="f2OffsetInput" value="0">
-                </div>
-                <div>
-                    <label>Start abschneiden (Sekunden)</label>
-                    <input type="number" id="f2TrimStartInput" value="0">
-                </div>
-                <div>
-                    <label>Ende abschneiden (Sekunden)</label>
-                    <input type="number" id="f2TrimEndInput" value="0">
-                </div>
-                <div style="display: flex; gap: 5px; margin-top: 5px;">
-                    <button id="f2ApplyBtn" class="btn" style="flex: 1;">Übernehmen</button>
-                    <button id="f2ResetBtn" class="btn" style="flex: 1;">Reset</button>
-                </div>
-            </div>
-        </div>
-    </header>
+      <label for="tcx2File" class="btn btn-outline">TCX2</label>
+      <input type="file" id="tcx2File" accept=".tcx" hidden>
+    </div>
+  </header>
 
-    <div id="emptyState" class="empty-state">
-        Bitte lade mindestens eine TCX-Datei hoch, um die Analyse zu starten.
+  <main class="container">
+    <!-- Hinweiselement vor dem Upload -->
+    <div id="noDataMessage" class="empty-state">
+      <p>Keine TCX-Datei geladen.</p>
+      <small>Tippe oben auf "TCX1", um die Hauptdatei zu laden.</small>
     </div>
 
-    <div id="dashboard" class="hidden">
-        <!-- Stats Dashboard -->
-        <div class="dashboard-grid">
-            <div class="stat-card">
-                <div class="label">Sportart</div>
-                <div class="value" id="statSport">-</div>
-            </div>
-            <div class="stat-card">
-                <div class="label">Startzeit</div>
-                <div class="value" id="statStartTime">-</div>
-            </div>
-            <div class="stat-card">
-                <div class="label">Distanz</div>
-                <div class="value" id="statDistance">-</div>
-            </div>
-            <div class="stat-card">
-                <div class="label">Durchschn. Puls</div>
-                <div class="value" id="statAvgHr">-</div>
-            </div>
-            <div class="stat-card">
-                <div class="label">Max. Puls</div>
-                <div class="value" id="statMaxHr">-</div>
-            </div>
-            <div class="stat-card">
-                <div class="label">Aerober Drift</div>
-                <div class="value" id="statDrift">-</div>
-            </div>
+    <!-- Dashboard / Auswertung -->
+    <div id="dashboard" class="dashboard-content">
+      
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="label">Sportart</span>
+          <span class="value" id="sportVal">Running / -</span>
+        </div>
+        <div class="stat-card">
+          <span class="label">Startzeit</span>
+          <span class="value" id="startTimeVal">- / -</span>
+        </div>
+        <div class="stat-card">
+          <span class="label">Distanz</span>
+          <span class="value" id="distanceVal">- / -</span>
+        </div>
+        <div class="stat-card">
+          <span class="label">Durchschn. Puls</span>
+          <span class="value" id="avgHrVal">- / -</span>
+        </div>
+        <div class="stat-card">
+          <span class="label">Max. Puls</span>
+          <span class="value" id="maxHrVal">- / -</span>
+        </div>
+        <div class="stat-card">
+          <span class="label">Aerober Drift</span>
+          <span class="value" id="driftVal">- / -</span>
+        </div>
+      </div>
+
+      <!-- Achsensteuerung -->
+      <div class="controls-section">
+        <div class="control-group">
+          <span class="control-label">Achse Links:</span>
+          <div class="button-group" id="leftAxisBtns">
+            <button class="axis-btn active" data-axis="hr">Puls</button>
+            <button class="axis-btn" data-axis="pace">Pace</button>
+            <button class="axis-btn" data-axis="speed">km/h</button>
+            <button class="axis-btn" data-axis="power">Leistung</button>
+            <button class="axis-btn" data-axis="gap">GAP</button>
+            <button class="axis-btn" data-axis="alt">Höhe</button>
+          </div>
         </div>
 
-        <!-- Controls (Achsensauswahl & Reset) -->
-        <div class="controls-panel">
-            <div class="tab-group">
-                <span class="axis-label">Achse Links:</span>
-                <div class="metric-tabs" id="primaryTabs">
-                    <button class="tab active" data-metric="hr">Puls</button>
-                    <button class="tab" data-metric="pace">Pace</button>
-                    <button class="tab" data-metric="speed">km/h</button>
-                    <button class="tab" data-metric="power">Leistung</button>
-                    <button class="tab" data-metric="gap">GAP</button>
-                    <button class="tab" data-metric="alt">Höhe</button>
-                    <button class="tab" data-metric="cadence">Cadence</button>
-                    <button class="tab" data-metric="eff">Effizienz</button>
-                </div>
-            </div>
-
-            <div class="tab-group">
-                <span class="axis-label">Achse Rechts:</span>
-                <div class="metric-tabs" id="secondaryTabs">
-                    <button class="tab active" data-metric="none">Aus</button>
-                    <button class="tab" data-metric="hr">Puls</button>
-                    <button class="tab" data-metric="pace">Pace</button>
-                    <button class="tab" data-metric="speed">km/h</button>
-                    <button class="tab" data-metric="power">Leistung</button>
-                    <button class="tab" data-metric="gap">GAP</button>
-                    <button class="tab" data-metric="alt">Höhe</button>
-                    <button class="tab" data-metric="cadence">Cadence</button>
-                    <button class="tab" data-metric="eff">Effizienz</button>
-                </div>
-                <button id="resetZoomBtn" class="btn" style="margin-left: auto;">🔍 Zoom Reset</button>
-            </div>
+        <div class="control-group">
+          <span class="control-label">Achse Rechts:</span>
+          <div class="button-group" id="rightAxisBtns">
+            <button class="axis-btn active" data-axis="off">Aus</button>
+            <button class="axis-btn" data-axis="hr">Puls</button>
+            <button class="axis-btn" data-axis="pace">Pace</button>
+            <button class="axis-btn" data-axis="speed">km/h</button>
+            <button class="axis-btn" data-axis="power">Leistung</button>
+            <button class="axis-btn" data-axis="gap">GAP</button>
+          </div>
         </div>
+      </div>
 
-        <!-- Chart -->
-        <div class="chart-container">
-            <canvas id="tcxChart"></canvas>
-        </div>
+      <!-- Diagramm -->
+      <div class="chart-container">
+        <canvas id="tcxChart"></canvas>
+      </div>
 
-        <!-- Intervall Tabelle -->
-        <div class="table-container">
-            <div class="table-header">
-                <h3>Intervall-Übersicht</h3>
-                <div>
-                    <label for="intervalSelect" style="font-size: 11px; color: var(--text-muted);">Intervall-Länge: </label>
-                    <select id="intervalSelect" class="btn">
-                        <option value="1">1 min</option>
-                        <option value="5" selected>5 min</option>
-                        <option value="10">10 min</option>
-                        <option value="15">15 min</option>
-                    </select>
-                </div>
-            </div>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Zeitraum</th>
-                        <th>Geschwindigkeit / Pace</th>
-                        <th>Puls</th>
-                        <th>Cadence</th>
-                        <th>Schrittlänge</th>
-                    </tr>
-                </thead>
-                <tbody id="intervalTableBody">
-                    <!-- Dynamisch befüllt durch app.js -->
-                </tbody>
-            </table>
-        </div>
     </div>
+  </main>
 
-    <script src="app.js"></script>
 </body>
 </html>
