@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TCX Analytics</title>
+  <style>
+    .hidden { display: none !important; }
+  </style>
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
   <script src="app.js" defer></script>
@@ -14,7 +17,7 @@
   <header class="app-header">
     <div class="header-title-container">
       <h1>TCX Analytics</h1>
-      <span class="version-tag" style="display: block; font-size: 0.75rem; color: #888888; font-weight: normal; margin-top: -2px;">v1.0.2</span>
+      <span class="version-tag" style="display: block; font-size: 0.75rem; color: #888888; font-weight: normal; margin-top: -2px;">v1.0.3</span>
     </div>
     <div class="file-buttons">
       <label for="tcx1File" class="btn btn-primary">TCX1</label>
@@ -32,8 +35,74 @@
       <small>Tippe oben auf "TCX1", um die Hauptdatei zu laden.</small>
     </div>
 
-    <!-- Dashboard / Auswertung (erzwungen ausgeblendet) -->
-    <div id="dashboard" class="dashboard-content" style="display: none !important;">
+    <!-- Dashboard / Auswertung (standardmäßig ausgeblendet) -->
+    <div id="dashboard" class="dashboard-content hidden">
+      
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <span class="label">Sportart</span>
+          <span class="value" id="sportVal">Running / -</span>
+        </div>
+        <div class="stat-card">
+          <span class="label">Startzeit</span>
+          <span class="value" id="startTimeVal">- / -</span>
+        </div>
+        <div class="stat-card">
+          <span class="label">Distanz</span>
+          <span class="value" id="distanceVal">- / -</span>
+        </div>
+        <div class="stat-card">
+          <span class="label">Durchschn. Puls</span>
+          <span class="value" id="avgHrVal">- / -</span>
+        </div>
+        <div class="stat-card">
+          <span class="label">Max. Puls</span>
+          <span class="value" id="maxHrVal">- / -</span>
+        </div>
+        <div class="stat-card">
+          <span class="label">Aerober Drift</span>
+          <span class="value" id="driftVal">- / -</span>
+        </div>
+      </div>
+
+      <!-- Achsensteuerung -->
+      <div class="controls-section">
+        <div class="control-group">
+          <span class="control-label">Achse Links:</span>
+          <div class="button-group" id="leftAxisBtns">
+            <button class="axis-btn active" data-axis="hr">Puls</button>
+            <button class="axis-btn" data-axis="pace">Pace</button>
+            <button class="axis-btn" data-axis="speed">km/h</button>
+            <button class="axis-btn" data-axis="power">Leistung</button>
+            <button class="axis-btn" data-axis="gap">GAP</button>
+            <button class="axis-btn" data-axis="alt">Höhe</button>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <span class="control-label">Achse Rechts:</span>
+          <div class="button-group" id="rightAxisBtns">
+            <button class="axis-btn active" data-axis="off">Aus</button>
+            <button class="axis-btn" data-axis="hr">Puls</button>
+            <button class="axis-btn" data-axis="pace">Pace</button>
+            <button class="axis-btn" data-axis="speed">km/h</button>
+            <button class="axis-btn" data-axis="power">Leistung</button>
+            <button class="axis-btn" data-axis="gap">GAP</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Diagramm -->
+      <div class="chart-container">
+        <canvas id="tcxChart"></canvas>
+      </div>
+
+    </div>
+  </main>
+
+</body>
+</html>
       
       <!-- Stats Grid -->
       <div class="stats-grid">
