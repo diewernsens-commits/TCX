@@ -1,13 +1,18 @@
-<!-- Version: v1.0.7 -->
+<!-- Version: v1.0.8 -->
 <!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TCX Analytics</title>
-  <link rel="stylesheet" href="style.css?v=1.0.7">
+  <link rel="stylesheet" href="style.css?v=1.0.8">
+  
+  <!-- Chart.js, Hammer.js (Touch) und Zoom Plugin -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
-  <script src="app.js?v=1.0.7" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js" defer></script>
+  
+  <script src="app.js?v=1.0.8" defer></script>
 </head>
 <body>
 
@@ -15,7 +20,7 @@
   <header class="app-header">
     <div class="header-title-container">
       <h1>TCX Analytics</h1>
-      <span class="version-tag" style="display: block; font-size: 0.75rem; color: #888888; font-weight: normal; margin-top: -2px;">v1.0.7</span>
+      <span class="version-tag" style="display: block; font-size: 0.75rem; color: #888888; font-weight: normal; margin-top: -2px;">v1.0.8</span>
     </div>
     <div class="file-buttons">
       <button type="button" class="btn btn-primary" onclick="document.getElementById('tcx1File').click()">TCX1</button>
@@ -94,6 +99,28 @@
       <!-- Diagramm -->
       <div class="chart-container">
         <canvas id="tcxChart"></canvas>
+      </div>
+
+      <!-- Runden / Intervall Tabelle -->
+      <div class="table-section">
+        <h3>Runden & Splits</h3>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Distanz</th>
+                <th>Zeit</th>
+                <th>Pace</th>
+                <th>Ø Puls</th>
+                <th>Max Puls</th>
+              </tr>
+            </thead>
+            <tbody id="lapsTableBody">
+              <!-- Dynamisch befüllt -->
+            </tbody>
+          </table>
+        </div>
       </div>
 
     </div>
