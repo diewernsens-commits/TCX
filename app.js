@@ -1,4 +1,4 @@
-// Version: v1.0.7
+// Version: v1.0.8
 let chartInstance = null;
 
 let file1Data = null;
@@ -115,32 +115,100 @@ function refreshAllUI() {
     } catch(e) {
         console.error("Fehler in updateChart:", e);
     }
+
+    try {
+        updateTableUI();
+    } catch(e) {
+        console.error("Fehler in updateTableUI:", e);
+    }
+}
+
+function renderValPair(val1, val2) {
+    const f1Str = val1 !== undefined && val1 !== null ? val1 : '-';
+    if (!file2Data) return f1Str;
+    const f2Str = val2 !== undefined && val2 !== null ? val2 : '-';
+    return `${f1Str} / <span class="tcx2-val">${f2Str}</span>`;
 }
 
 function updateDashboardUI() {
     const f1Sport = file1Data ? file1Data.sport : '-';
     const f2Sport = file2Data ? file2Data.sport : '-';
-    document.getElementById('sportVal').textContent = `${f1Sport} / ${f2Sport}`;
+    document.getElementById('sportVal').innerHTML = renderValPair(f1Sport, f2Sport);
 
     const f1Start = file1Data ? formatDate(file1Data.startDate) : '-';
     const f2Start = file2Data ? formatDate(file2Data.startDate) : '-';
-    document.getElementById('startTimeVal').textContent = `${f1Start} / ${f2Start}`;
+    document.getElementById('startTimeVal').innerHTML = renderValPair(f1Start, f2Start);
 
     const f1Dist = file1Data ? `${file1Data.stats.dist.toFixed(2)} km` : '-';
     const f2Dist = file2Data ? `${file2Data.stats.dist.toFixed(2)} km` : '-';
-    document.getElementById('distanceVal').textContent = `${f1Dist} / ${f2Dist}`;
+    document.getElementById('distanceVal').innerHTML = renderValPair(f1Dist, f2Dist);
 
     const f1AvgHr = file1Data ? `${file1Data.stats.avgHr} bpm` : '-';
     const f2AvgHr = file2Data ? `${file2Data.stats.avgHr} bpm` : '-';
-    document.getElementById('avgHrVal').textContent = `${f1AvgHr} / ${f2AvgHr}`;
+    document.getElementById('avgHrVal').innerHTML = renderValPair(f1AvgHr, f2AvgHr);
 
     const f1MaxHr = file1Data ? `${file1Data.stats.maxHr} bpm` : '-';
     const f2MaxHr = file2Data ? `${file2Data.stats.maxHr} bpm` : '-';
-    document.getElementById('maxHrVal').textContent = `${f1MaxHr} / ${f2MaxHr}`;
+    document.getElementById('maxHrVal').innerHTML = renderValPair(f1MaxHr, f2MaxHr);
 
     const f1Drift = file1Data ? `${file1Data.stats.drift > 0 ? '+' : ''}${file1Data.stats.drift.toFixed(1)}%` : '-';
     const f2Drift = file2Data ? `${file2Data.stats.drift > 0 ? '+' : ''}${file2Data.stats.drift.toFixed(1)}%` : '-';
-    document.getElementById('driftVal').textContent = `${f1Drift} / ${f2Drift}`;
+    document.getElementById('driftVal').innerHTML = renderValPair(f1Drift, f2Drift);
+}
+
+function formatSecsToMinSec(sec) {
+    if (!sec || isNaN(sec) || sec <= 0) return '-';
+    const m = Math.floor(sec / 60);
+    const s = Math.round(sec % 60);
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+}
+
+function formatPaceVal(paceMin) {
+    if (!paceMin || isNaN(paceMin) || paceMin <= 0 || paceMin > 20) return '-';
+    const m = Math.floor(paceMin);
+    const s = Math.round((paceMin - m) * 60);
+    return `${m}:${s < 10 ? '0' : ''}${s} /km`;
+}
+
+function updateTableUI() {
+    const tbody = document.getElementById('lapsTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const laps1 = file1Data ? file1Data.laps : [];
+    const laps2 = file2Data ? file2Data.laps : [];
+
+    const maxLaps = Math.max(laps1.length, laps2.length);
+
+    if (maxLaps === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#888;">Keine Runden-Daten vorhanden</td></tr>';
+        return;
+    }
+
+    for (let i = 0; i < maxLaps; i++) {
+        const l1 = laps1[i];
+        const l2 = laps2[i];
+
+        const tr = document.createElement('tr');
+
+        const numCell = `${i + 1}`;
+        const distCell = renderValPair(l1 ? `${l1.distKm.toFixed(2)} km` : '-', l2 ? `${l2.distKm.toFixed(2)} km` : '-');
+        const timeCell = renderValPair(l1 ? formatSecsToMinSec(l1.timeSec) : '-', l2 ? formatSecsToMinSec(l2.timeSec) : '-');
+        const paceCell = renderValPair(l1 ? formatPaceVal(l1.paceMin) : '-', l2 ? formatPaceVal(l2.paceMin) : '-');
+        const avgHrCell = renderValPair(l1 && l1.avgHr ? `${l1.avgHr} bpm` : '-', l2 && l2.avgHr ? `${l2.avgHr} bpm` : '-');
+        const maxHrCell = renderValPair(l1 && l1.maxHr ? `${l1.maxHr} bpm` : '-', l2 && l2.maxHr ? `${l2.maxHr} bpm` : '-');
+
+        tr.innerHTML = `
+            <td><strong>${numCell}</strong></td>
+            <td>${distCell}</td>
+            <td>${timeCell}</td>
+            <td>${paceCell}</td>
+            <td>${avgHrCell}</td>
+            <td>${maxHrCell}</td>
+        `;
+
+        tbody.appendChild(tr);
+    }
 }
 
 function getTagVal(node, tagName) {
@@ -297,6 +365,62 @@ function parseTCX(xmlText, fileName) {
         });
     }
 
+    // Runden / Lap parsing
+    const laps = [];
+    for (let i = 0; i < allNodes.length; i++) {
+        if (allNodes[i].localName && allNodes[i].localName.toLowerCase() === 'lap') {
+            const lapNode = allNodes[i];
+            const timeSec = parseFloat(getTagVal(lapNode, "TotalTimeSeconds") || 0);
+            const distMeters = parseFloat(getTagVal(lapNode, "DistanceMeters") || 0);
+            const avgHr = parseInt(getTagVal(lapNode, "AverageHeartRateBpm") || getHrVal(lapNode) || 0, 10);
+            const maxHr = parseInt(getTagVal(lapNode, "MaximumHeartRateBpm") || 0, 10);
+
+            if (timeSec > 0 || distMeters > 0) {
+                const distKm = distMeters / 1000;
+                const paceMin = (distKm > 0 && timeSec > 0) ? (timeSec / 60) / distKm : 0;
+                laps.push({
+                    distKm: distKm,
+                    timeSec: timeSec,
+                    paceMin: paceMin,
+                    avgHr: avgHr,
+                    maxHr: maxHr
+                });
+            }
+        }
+    }
+
+    // Fallback: Wenn im TCX keine Laps angelegt wurden, erstelle automatisch 1-km-Splits
+    if (laps.length === 0 && trackpoints.length > 0) {
+        let currentKm = 1;
+        let startPt = trackpoints[0];
+        let segmentHrs = [];
+
+        for (let i = 0; i < trackpoints.length; i++) {
+            const pt = trackpoints[i];
+            if (pt.hr) segmentHrs.push(pt.hr);
+
+            if (pt.dist >= currentKm || i === trackpoints.length - 1) {
+                const deltaDist = pt.dist - startPt.dist;
+                const deltaTime = pt.elapsedSec - startPt.elapsedSec;
+                if (deltaDist > 0.05 && deltaTime > 0) {
+                    const segAvgHr = segmentHrs.length ? Math.round(segmentHrs.reduce((a,b)=>a+b,0)/segmentHrs.length) : 0;
+                    const segMaxHr = segmentHrs.length ? Math.max(...segmentHrs) : 0;
+                    const pace = (deltaTime / 60) / deltaDist;
+                    laps.push({
+                        distKm: deltaDist,
+                        timeSec: deltaTime,
+                        paceMin: pace,
+                        avgHr: segAvgHr,
+                        maxHr: segMaxHr
+                    });
+                }
+                startPt = pt;
+                segmentHrs = [];
+                currentKm = Math.floor(pt.dist) + 1;
+            }
+        }
+    }
+
     const startDateRaw = getTagVal(xmlDoc, "Id") || firstTimeStr;
     const startDate = startDateRaw ? new Date(startDateRaw) : null;
     const maxDist = trackpoints.length > 0 ? trackpoints[trackpoints.length - 1].dist : 0;
@@ -323,6 +447,7 @@ function parseTCX(xmlText, fileName) {
         sport: sport,
         startDate: startDate,
         trackpoints: trackpoints,
+        laps: laps,
         stats: { dist: maxDist, avgHr: avgHr, maxHr: maxHr, drift: drift }
     };
 }
@@ -456,6 +581,17 @@ function updateChart() {
                 legend: {
                     display: true,
                     labels: { color: '#e0e0e0', boxWidth: 12, font: { size: 10 } }
+                },
+                zoom: {
+                    pan: {
+                        enabled: true,
+                        mode: 'x'
+                    },
+                    zoom: {
+                        wheel: { enabled: true },
+                        pinch: { enabled: true },
+                        mode: 'x'
+                    }
                 }
             }
         }
