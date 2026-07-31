@@ -1,4 +1,4 @@
-/* Version: v1.0.6 */
+/* Version: v1.0.7 */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -96,10 +96,10 @@ body {
   gap: 15px;
 }
 
-/* Stats Grid */
+/* Stats Grid (2 Spalten nebeneinander) */
 .stats-grid {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 8px;
 }
 
@@ -107,21 +107,23 @@ body {
   background-color: #1e1e1e;
   border: 1px solid #333;
   border-radius: 8px;
-  padding: 10px 14px;
+  padding: 8px 10px;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
 }
 
 .stat-card .label {
-  font-size: 0.85rem;
+  font-size: 0.75rem;
   color: #888;
 }
 
 .stat-card .value {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: #fff;
+  word-break: break-word;
 }
 
 /* Controls Section */
