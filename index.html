@@ -1,26 +1,26 @@
-<!-- Version: v1.0.8 -->
+<!-- Version: v1.0.9 -->
 <!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TCX Analytics</title>
-  <link rel="stylesheet" href="style.css?v=1.0.8">
+  <link rel="stylesheet" href="style.css?v=1.0.9">
   
   <!-- Chart.js, Hammer.js (Touch) und Zoom Plugin -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js" defer></script>
   
-  <script src="app.js?v=1.0.8" defer></script>
+  <script src="app.js?v=1.0.9" defer></script>
 </head>
 <body>
 
-  <!-- Header mit Titel, Versionsnummer und Upload-Buttons -->
+  <!-- Header -->
   <header class="app-header">
     <div class="header-title-container">
       <h1>TCX Analytics</h1>
-      <span class="version-tag" style="display: block; font-size: 0.75rem; color: #888888; font-weight: normal; margin-top: -2px;">v1.0.8</span>
+      <span class="version-tag" style="display: block; font-size: 0.75rem; color: #888888; font-weight: normal; margin-top: -2px;">v1.0.9</span>
     </div>
     <div class="file-buttons">
       <button type="button" class="btn btn-primary" onclick="document.getElementById('tcx1File').click()">TCX1</button>
@@ -32,13 +32,13 @@
   </header>
 
   <main class="container">
-    <!-- Hinweiselement vor dem Upload -->
+    <!-- Empty State -->
     <div id="noDataMessage" class="empty-state">
       <p>Keine TCX-Datei geladen.</p>
       <small>Tippe oben auf "TCX1", um die Hauptdatei zu laden.</small>
     </div>
 
-    <!-- Dashboard / Auswertung (standardmäßig ausgeblendet) -->
+    <!-- Dashboard -->
     <div id="dashboard" class="dashboard-content hidden" style="display: none;">
       
       <!-- Stats Grid -->
@@ -77,6 +77,7 @@
             <button class="axis-btn active" data-axis="hr">Puls</button>
             <button class="axis-btn" data-axis="pace">Pace</button>
             <button class="axis-btn" data-axis="speed">km/h</button>
+            <button class="axis-btn" data-axis="eff">Effizienz</button>
             <button class="axis-btn" data-axis="power">Leistung</button>
             <button class="axis-btn" data-axis="gap">GAP</button>
             <button class="axis-btn" data-axis="alt">Höhe</button>
@@ -90,6 +91,7 @@
             <button class="axis-btn" data-axis="hr">Puls</button>
             <button class="axis-btn" data-axis="pace">Pace</button>
             <button class="axis-btn" data-axis="speed">km/h</button>
+            <button class="axis-btn" data-axis="eff">Effizienz</button>
             <button class="axis-btn" data-axis="power">Leistung</button>
             <button class="axis-btn" data-axis="gap">GAP</button>
           </div>
@@ -103,7 +105,19 @@
 
       <!-- Runden / Intervall Tabelle -->
       <div class="table-section">
-        <h3>Runden & Splits</h3>
+        <div class="table-header-controls">
+          <h3>Runden & Splits</h3>
+          <div class="split-selector">
+            <label for="splitSelect">Mittelung:</label>
+            <select id="splitSelect" class="split-dropdown">
+              <option value="laps">Original / Laps</option>
+              <option value="1" selected>1 km</option>
+              <option value="2">2 km</option>
+              <option value="5">5 km</option>
+            </select>
+          </div>
+        </div>
+
         <div class="table-responsive">
           <table class="data-table">
             <thead>
