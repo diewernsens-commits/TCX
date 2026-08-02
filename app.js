@@ -1,4 +1,4 @@
-// Version: v1.0.8
+// Version: v1.0.9
 let chartInstance = null;
 
 let file1Data = null;
@@ -14,6 +14,7 @@ const METRICS = {
     hr: { label: 'Puls (bpm)', reverseY: false, unit: 'bpm' },
     pace: { label: 'Pace (min/km)', reverseY: true, unit: 'min/km' },
     speed: { label: 'Geschwindigkeit (km/h)', reverseY: false, unit: 'km/h' },
+    eff: { label: 'Effizienz ((m/s)/bpm * 1000)', reverseY: false, unit: 'eff' },
     power: { label: 'Leistung (W, 30s Ø)', reverseY: false, unit: 'W' },
     gap: { label: 'GAP (min/km)', reverseY: true, unit: 'min/km' },
     alt: { label: 'Höhe (m)', reverseY: false, unit: 'm' }
@@ -24,9 +25,16 @@ function initApp() {
 
     const input1 = document.getElementById('tcx1File');
     const input2 = document.getElementById('tcx2File');
+    const splitSelect = document.getElementById('splitSelect');
 
     if (input1) input1.addEventListener('change', (e) => handleFileSelect(e, 1));
     if (input2) input2.addEventListener('change', (e) => handleFileSelect(e, 2));
+
+    if (splitSelect) {
+        splitSelect.addEventListener('change', () => {
+            updateTableUI();
+        });
+    }
 
     // Event-Listener Linke Achse
     document.querySelectorAll('#leftAxisBtns .axis-btn').forEach(button => {
@@ -104,23 +112,9 @@ function refreshAllUI() {
 
     if (!file1Data && !file2Data) return;
 
-    try {
-        updateDashboardUI();
-    } catch(e) {
-        console.error("Fehler in updateDashboardUI:", e);
-    }
-
-    try {
-        updateChart();
-    } catch(e) {
-        console.error("Fehler in updateChart:", e);
-    }
-
-    try {
-        updateTableUI();
-    } catch(e) {
-        console.error("Fehler in updateTableUI:", e);
-    }
+    try { updateDashboardUI(); } catch(e) { console.error("Fehler in updateDashboardUI:", e); }
+    try { updateChart(); } catch(e) { console.error("Fehler in updateChart:", e); }
+    try { updateTableUI(); } catch(e) { console.error("Fehler in updateTableUI:", e); }
 }
 
 function renderValPair(val1, val2) {
@@ -170,13 +164,59 @@ function formatPaceVal(paceMin) {
     return `${m}:${s < 10 ? '0' : ''}${s} /km`;
 }
 
+function generateKmSplits(trackpoints, intervalKm) {
+    if (!trackpoints || trackpoints.length === 0) return [];
+    const splits = [];
+    let currentTargetKm = intervalKm;
+    let startPt = trackpoints[0];
+    let segmentHrs = [];
+
+    for (let i = 0; i < trackpoints.length; i++) {
+        const pt = trackpoints[i];
+        if (pt.hr) segmentHrs.push(pt.hr);
+
+        if (pt.dist >= currentTargetKm || i === trackpoints.length - 1) {
+            const deltaDist = pt.dist - startPt.dist;
+            const deltaTime = pt.elapsedSec - startPt.elapsedSec;
+            if (deltaDist > 0.05 && deltaTime > 0) {
+                const segAvgHr = segmentHrs.length ? Math.round(segmentHrs.reduce((a, b) => a + b, 0) / segmentHrs.length) : 0;
+                const segMaxHr = segmentHrs.length ? Math.max(...segmentHrs) : 0;
+                const pace = (deltaTime / 60) / deltaDist;
+                splits.push({
+                    distKm: deltaDist,
+                    timeSec: deltaTime,
+                    paceMin: pace,
+                    avgHr: segAvgHr,
+                    maxHr: segMaxHr
+                });
+            }
+            startPt = pt;
+            segmentHrs = [];
+            currentTargetKm = Math.floor(pt.dist / intervalKm) * intervalKm + intervalKm;
+        }
+    }
+    return splits;
+}
+
+function getLapsForFile(fileObj, selectedMode) {
+    if (!fileObj) return [];
+    if (selectedMode === 'laps' && fileObj.laps && fileObj.laps.length > 0) {
+        return fileObj.laps;
+    }
+    const intervalKm = parseFloat(selectedMode) || 1;
+    return generateKmSplits(fileObj.trackpoints, intervalKm);
+}
+
 function updateTableUI() {
     const tbody = document.getElementById('lapsTableBody');
     if (!tbody) return;
     tbody.innerHTML = '';
 
-    const laps1 = file1Data ? file1Data.laps : [];
-    const laps2 = file2Data ? file2Data.laps : [];
+    const splitSelect = document.getElementById('splitSelect');
+    const selectedMode = splitSelect ? splitSelect.value : '1';
+
+    const laps1 = getLapsForFile(file1Data, selectedMode);
+    const laps2 = getLapsForFile(file2Data, selectedMode);
 
     const maxLaps = Math.max(laps1.length, laps2.length);
 
@@ -389,38 +429,6 @@ function parseTCX(xmlText, fileName) {
         }
     }
 
-    // Fallback: Wenn im TCX keine Laps angelegt wurden, erstelle automatisch 1-km-Splits
-    if (laps.length === 0 && trackpoints.length > 0) {
-        let currentKm = 1;
-        let startPt = trackpoints[0];
-        let segmentHrs = [];
-
-        for (let i = 0; i < trackpoints.length; i++) {
-            const pt = trackpoints[i];
-            if (pt.hr) segmentHrs.push(pt.hr);
-
-            if (pt.dist >= currentKm || i === trackpoints.length - 1) {
-                const deltaDist = pt.dist - startPt.dist;
-                const deltaTime = pt.elapsedSec - startPt.elapsedSec;
-                if (deltaDist > 0.05 && deltaTime > 0) {
-                    const segAvgHr = segmentHrs.length ? Math.round(segmentHrs.reduce((a,b)=>a+b,0)/segmentHrs.length) : 0;
-                    const segMaxHr = segmentHrs.length ? Math.max(...segmentHrs) : 0;
-                    const pace = (deltaTime / 60) / deltaDist;
-                    laps.push({
-                        distKm: deltaDist,
-                        timeSec: deltaTime,
-                        paceMin: pace,
-                        avgHr: segAvgHr,
-                        maxHr: segMaxHr
-                    });
-                }
-                startPt = pt;
-                segmentHrs = [];
-                currentKm = Math.floor(pt.dist) + 1;
-            }
-        }
-    }
-
     const startDateRaw = getTagVal(xmlDoc, "Id") || firstTimeStr;
     const startDate = startDateRaw ? new Date(startDateRaw) : null;
     const maxDist = trackpoints.length > 0 ? trackpoints[trackpoints.length - 1].dist : 0;
@@ -491,10 +499,7 @@ function createDataset(fileObj, metricKey, axisId, color, isDashed, filePrefix) 
 
 function updateChart() {
     if (!file1Data && !file2Data) return;
-    if (typeof Chart === 'undefined') {
-        console.warn("Chart.js ist noch nicht geladen.");
-        return;
-    }
+    if (typeof Chart === 'undefined') return;
 
     const datasets = [];
     const primaryConfig = METRICS[activePrimaryMetric];
@@ -583,15 +588,8 @@ function updateChart() {
                     labels: { color: '#e0e0e0', boxWidth: 12, font: { size: 10 } }
                 },
                 zoom: {
-                    pan: {
-                        enabled: true,
-                        mode: 'x'
-                    },
-                    zoom: {
-                        wheel: { enabled: true },
-                        pinch: { enabled: true },
-                        mode: 'x'
-                    }
+                    pan: { enabled: true, mode: 'x' },
+                    zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' }
                 }
             }
         }
