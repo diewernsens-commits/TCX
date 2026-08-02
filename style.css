@@ -1,4 +1,4 @@
-/* Version: v1.0.8 */
+/* Version: v1.0.9 */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -13,7 +13,6 @@ body {
   line-height: 1.5;
 }
 
-/* Verstecken-Klasse */
 .hidden {
   display: none !important;
 }
@@ -96,7 +95,7 @@ body {
   gap: 15px;
 }
 
-/* Stats Grid (2 Spalten nebeneinander) */
+/* Stats Grid */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -183,7 +182,7 @@ body {
   margin-top: 5px;
 }
 
-/* Table Section */
+/* Table Section & Header Controls */
 .table-section {
   margin-top: 10px;
   background-color: #1e1e1e;
@@ -192,11 +191,43 @@ body {
   padding: 12px;
 }
 
+.table-header-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
 .table-section h3 {
   font-size: 0.95rem;
   color: #fff;
-  margin-bottom: 10px;
   font-weight: 600;
+}
+
+.split-selector {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.split-selector label {
+  font-size: 0.8rem;
+  color: #aaa;
+}
+
+.split-dropdown {
+  background-color: #222;
+  color: #fff;
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  outline: none;
+  cursor: pointer;
+}
+
+.split-dropdown:focus {
+  border-color: #555;
 }
 
 .table-responsive {
